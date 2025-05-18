@@ -1,0 +1,76 @@
+{
+  "movies": [
+    {
+      "title": "The Shawshank Redemption",
+      "year": 1994,
+      "rating": 9.3,
+      "genres": ["Drama"],
+      "runtime": 142,
+      "tagline": "Fear can hold you prisoner. Hope can set you free.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg"
+    },
+    {
+      "title": "The Godfather",
+      "year": 1972,
+      "rating": 9.2,
+      "genres": ["Crime", "Drama"],
+      "runtime": 175,
+      "tagline": "An offer you can't refuse.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg"
+    },
+    {
+      "title": "The Dark Knight",
+      "year": 2008,
+      "rating": 9.0,
+      "genres": ["Action", "Crime", "Drama", "Thriller"],
+      "runtime": 152,
+      "tagline": "Why So Serious?",
+      "poster_path": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
+    },
+    {
+      "title": "Inception",
+      "year": 2010,
+      "rating": 8.8,
+      "genres": ["Action", "Adventure", "Sci-Fi", "Thriller"],
+      "runtime": 148,
+      "tagline": "Your mind is the scene of the crime.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"
+    },
+    {
+      "title": "The Matrix",
+      "year": 1999,
+      "rating": 8.7,
+      "genres": ["Action", "Sci-Fi"],
+      "runtime": 136,
+      "tagline": "Welcome to the Real World.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg"
+    },
+    {
+      "title": "Interstellar",
+      "year": 2014,
+      "rating": 8.6,
+      "genres": ["Adventure", "Drama", "Sci-Fi"],
+      "runtime": 169,
+      "tagline": "Mankind was born on Earth. It was never meant to die here.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg"
+    },
+    {
+      "title": "Pulp Fiction",
+      "year": 1994,
+      "rating": 8.9,
+      "genres": ["Crime", "Drama"],
+      "runtime": 154,
+      "tagline": "Just because you are a character doesn't mean you have character.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg"
+    },
+    {
+      "title": "The Lord of the Rings: The Fellowship of the Ring",
+      "year": 2001,
+      "rating": 8.8,
+      "genres": ["Action", "Adventure", "Fantasy"],
+      "runtime": 178,
+      "tagline": "One Ring to rule them all.",
+      "poster_path": "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg"
+    }
+  ]
+} 
