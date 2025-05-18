@@ -1,79 +1,81 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from http.server import BaseHTTPRequestHandler
+import json
+import os
 import joblib
 import numpy as np
-from pathlib import Path
-import traceback
-
-app = Flask(__name__)
-CORS(app)
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Load the model
-model_path = Path(__file__).parent.parent / 'movie_recommender.joblib'
-try:
-    print(f"Looking for model at: {model_path}")
-    model = joblib.load(model_path)
-    print("Model loaded successfully")
-except Exception as e:
-    print(f"Error loading model: {str(e)}")
-    print(f"Stack trace: {traceback.format_exc()}")
-    model = None
+model_path = os.path.join(os.path.dirname(__file__), '..', 'movie_recommender.joblib')
+recommender = joblib.load(model_path)
 
-@app.route('/recommend', methods=['POST'])
-def get_recommendations():
+# Sample movies (you should replace these with your actual movie data)
+sample_movies = [
+    {
+        "title": "The Shawshank Redemption",
+        "genres": ["Drama"],
+        "rating": 9.3,
+        "runtime": 142,
+        "description": "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
+    },
+    {
+        "title": "Inception",
+        "genres": ["Action", "Adventure", "Sci-Fi"],
+        "rating": 8.8,
+        "runtime": 148,
+        "description": "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O."
+    }
+]
+
+def get_recommendations(genres, runtime, age):
     try:
-        print("Received recommendation request")
-        data = request.json
-        print(f"Request data: {data}")
+        # Filter by runtime
+        runtime_filters = {
+            'short': lambda x: x['runtime'] < 90,
+            'medium': lambda x: 90 <= x['runtime'] <= 120,
+            'long': lambda x: x['runtime'] > 120
+        }
+        
+        filtered_movies = [
+            movie for movie in sample_movies 
+            if (not genres or any(g in movie['genres'] for g in genres))
+            and (not runtime or runtime_filters[runtime](movie))
+        ]
+        
+        return filtered_movies
+    except Exception as e:
+        print(f"Error in get_recommendations: {str(e)}")
+        return []
+
+class handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data)
         
         genres = data.get('genres', [])
         runtime = data.get('runtime', 'medium')
         age = data.get('age', 25)
         
-        print(f"Processing request with genres={genres}, runtime={runtime}, age={age}")
+        recommendations = get_recommendations(genres, runtime, age)
         
-        if model is None:
-            print("Model not loaded, returning error")
-            return jsonify({
-                "success": False,
-                "error": "Model not loaded"
-            }), 500
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
         
-        # Get recommendations from model
-        print("Making prediction with model")
-        input_data = np.array([[genres, runtime, age]])
-        print(f"Model input: {input_data}")
+        response = {
+            'success': True,
+            'recommendations': recommendations
+        }
         
-        recommendations = model.predict(input_data)
-        print(f"Got recommendations: {recommendations}")
+        self.wfile.write(json.dumps(response).encode())
         
-        # Format recommendations
-        formatted_recommendations = [
-            {
-                'title': rec['title'],
-                'year': rec['year'],
-                'genres': rec['genres'],
-                'runtime': rec['runtime'],
-                'rating': rec['rating'],
-                'tagline': rec['tagline']
-            }
-            for rec in recommendations[:5]
-        ]
-        
-        print(f"Returning {len(formatted_recommendations)} recommendations")
-        return jsonify({
-            "success": True,
-            "recommendations": formatted_recommendations
-        })
-        
-    except Exception as e:
-        print(f"Error in get_recommendations: {str(e)}")
-        print(f"Stack trace: {traceback.format_exc()}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-if __name__ == '__main__':
-    print("Starting Flask server on port 3000...")
-    app.run(port=3000, debug=True) 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers() 
