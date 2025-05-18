@@ -20,6 +20,8 @@ import {
   Rating,
   Chip,
   Stack,
+  Alert,
+  Snackbar,
 } from '@mui/material'
 import { motion } from 'framer-motion'
 import { useMutation } from '@tanstack/react-query'
@@ -45,9 +47,11 @@ const MovieRecommender = () => {
   const [runtime, setRuntime] = useState('medium')
   const [age, setAge] = useState('25')
   const [recommendations, setRecommendations] = useState<MovieRecommendation[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const recommendationMutation = useMutation({
     mutationFn: async (data: { genres: string[], runtime: string, age: number }) => {
+      console.log('Sending request with data:', data)
       const response = await fetch('/api/predict', {
         method: 'POST',
         headers: {
@@ -55,18 +59,38 @@ const MovieRecommender = () => {
         },
         body: JSON.stringify(data),
       })
+      
       if (!response.ok) {
-        throw new Error('Network response was not ok')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to get recommendations')
       }
-      return response.json()
+      
+      const responseData = await response.json()
+      console.log('Received response:', responseData)
+      
+      if (responseData.status === 'error') {
+        throw new Error(responseData.error || 'Failed to get recommendations')
+      }
+      
+      return responseData
     },
     onSuccess: (data) => {
+      console.log('Setting recommendations:', data.recommendations)
       setRecommendations(data.recommendations)
+      setError(null)
+    },
+    onError: (error: Error) => {
+      console.error('Error:', error)
+      setError(error.message)
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (selectedGenres.length === 0) {
+      setError('Please select at least one genre')
+      return
+    }
     recommendationMutation.mutate({
       genres: selectedGenres,
       runtime,
@@ -83,12 +107,16 @@ const MovieRecommender = () => {
       <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth error={selectedGenres.length === 0 && Boolean(error)}>
               <InputLabel>Genres</InputLabel>
               <Select
                 multiple
                 value={selectedGenres}
-                onChange={(e) => setSelectedGenres(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+                onChange={(e) => {
+                  const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                  setSelectedGenres(value)
+                  setError(null)
+                }}
                 label="Genres"
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -142,11 +170,17 @@ const MovieRecommender = () => {
               type="submit"
               disabled={recommendationMutation.isPending}
             >
-              Get Recommendations
+              {recommendationMutation.isPending ? 'Getting Recommendations...' : 'Get Recommendations'}
             </Button>
           </Grid>
         </Grid>
       </Paper>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {recommendations.map((movie, index) => (
