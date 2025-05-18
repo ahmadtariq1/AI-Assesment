@@ -48,7 +48,7 @@ const MovieRecommender = () => {
 
   const recommendationMutation = useMutation({
     mutationFn: async (data: { genres: string[], runtime: string, age: number }) => {
-      const response = await fetch('http://localhost:5000/api/predict', {
+      const response = await fetch('/api/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

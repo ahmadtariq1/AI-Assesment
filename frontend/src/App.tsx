@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import MovieRecommender from './components/MovieRecommender'
