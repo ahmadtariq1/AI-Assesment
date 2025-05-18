@@ -181,18 +181,18 @@ export const MovieRecommender = ({
                 >
                   <FormControlLabel
                     value="short"
-                    control={<Radio sx={{ color: THEME.textSecondary }} />}
-                    label={<Typography sx={{ color: THEME.textSecondary }}>Short (under 90 min)</Typography>}
+                    control={<Radio sx={{ color: 'rgba(255,255,255,0.7)' }} />}
+                    label={<Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>Short (less than 90 min)</Typography>}
                   />
                   <FormControlLabel
                     value="medium"
-                    control={<Radio sx={{ color: THEME.textSecondary }} />}
-                    label={<Typography sx={{ color: THEME.textSecondary }}>Medium (90-150 min)</Typography>}
+                    control={<Radio sx={{ color: 'rgba(255,255,255,0.7)' }} />}
+                    label={<Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>Medium (90-120 min)</Typography>}
                   />
                   <FormControlLabel
                     value="long"
-                    control={<Radio sx={{ color: THEME.textSecondary }} />}
-                    label={<Typography sx={{ color: THEME.textSecondary }}>Long (over 150 min)</Typography>}
+                    control={<Radio sx={{ color: 'rgba(255,255,255,0.7)' }} />}
+                    label={<Typography sx={{ color: 'rgba(255,255,255,0.7)' }}>Long (over 120 min)</Typography>}
                   />
                 </RadioGroup>
               </FormControl>
