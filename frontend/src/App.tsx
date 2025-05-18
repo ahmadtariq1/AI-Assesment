@@ -1,6 +1,5 @@
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import MovieRecommender from './components/MovieRecommender'
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import MovieRecommender from './components/MovieRecommender';
 
 const darkTheme = createTheme({
   palette: {
@@ -27,19 +26,15 @@ const darkTheme = createTheme({
       'sans-serif',
     ].join(','),
   },
-})
-
-const queryClient = new QueryClient()
+});
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={darkTheme}>
-        <CssBaseline />
-        <MovieRecommender />
-      </ThemeProvider>
-    </QueryClientProvider>
-  )
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <MovieRecommender />
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;

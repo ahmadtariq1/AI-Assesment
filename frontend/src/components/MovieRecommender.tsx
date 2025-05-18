@@ -1,101 +1,98 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   Box,
   Container,
   Typography,
   Paper,
   Grid,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
-  RadioGroup,
-  Radio,
-  FormControlLabel,
+  Select,
+  MenuItem,
   TextField,
   Button,
   Card,
-  CardMedia,
   CardContent,
-  Rating,
-  Chip,
-  Stack,
+  CardMedia,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  CircularProgress,
   Alert,
-} from '@mui/material'
-import { motion } from 'framer-motion'
-import { useMutation } from '@tanstack/react-query'
+  Fade,
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 
-const GENRES = [
+const genres = [
   'Action', 'Adventure', 'Animation', 'Comedy', 'Crime',
   'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror',
   'Mystery', 'Romance', 'Sci-Fi', 'Thriller'
-]
+];
 
-interface MovieRecommendation {
-  title: string
-  year: number
-  rating: number
-  genres: string[]
-  runtime: number
-  tagline: string
-  poster_path: string
+interface Movie {
+  name: string;
+  year: number;
+  genre: string;
+  rating: number;
+  runtime_category: string;
+  tagline: string;
 }
 
-const MovieRecommender = () => {
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
-  const [runtime, setRuntime] = useState('medium')
-  const [age, setAge] = useState('25')
-  const [recommendations, setRecommendations] = useState<MovieRecommendation[]>([])
-  const [error, setError] = useState<string | null>(null)
+export default function MovieRecommender() {
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [runtime, setRuntime] = useState('medium');
+  const [age, setAge] = useState('');
+  const [recommendations, setRecommendations] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const recommendationMutation = useMutation({
-    mutationFn: async (data: { genres: string[], runtime: string, age: number }) => {
-      console.log('Sending request with data:', data)
-      const response = await fetch('/api/predict', {
+  const handleGenreChange = (event: SelectChangeEvent<string[]>) => {
+    setSelectedGenres(event.target.value as string[]);
+  };
+
+  const handleRuntimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRuntime(event.target.value);
+  };
+
+  const handleAgeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAge(event.target.value);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedGenres.length || !age) {
+      setError('Please select at least one genre and enter your age');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/recommend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to get recommendations')
-      }
-      
-      const responseData = await response.json()
-      console.log('Received response:', responseData)
-      
-      if (responseData.status === 'error') {
-        throw new Error(responseData.error || 'Failed to get recommendations')
-      }
-      
-      return responseData
-    },
-    onSuccess: (data) => {
-      console.log('Setting recommendations:', data.recommendations)
-      setRecommendations(data.recommendations)
-      setError(null)
-    },
-    onError: (error: Error) => {
-      console.error('Error:', error)
-      setError(error.message)
-    },
-  })
+        body: JSON.stringify({
+          genres: selectedGenres.join(', '),
+          runtime,
+          age: parseInt(age),
+        }),
+      });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (selectedGenres.length === 0) {
-      setError('Please select at least one genre')
-      return
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get recommendations');
+      }
+
+      setRecommendations(data.recommendations);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
     }
-    recommendationMutation.mutate({
-      genres: selectedGenres,
-      runtime,
-      age: parseInt(age),
-    })
-  }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -103,29 +100,18 @@ const MovieRecommender = () => {
         Movie Recommendations
       </Typography>
 
-      <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth error={selectedGenres.length === 0 && Boolean(error)}>
+            <FormControl fullWidth>
               <InputLabel>Genres</InputLabel>
               <Select
                 multiple
                 value={selectedGenres}
-                onChange={(e) => {
-                  const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                  setSelectedGenres(value)
-                  setError(null)
-                }}
+                onChange={handleGenreChange}
                 label="Genres"
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={value} />
-                    ))}
-                  </Box>
-                )}
               >
-                {GENRES.map((genre) => (
+                {genres.map((genre) => (
                   <MenuItem key={genre} value={genre}>
                     {genre}
                   </MenuItem>
@@ -134,42 +120,50 @@ const MovieRecommender = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={3}>
-            <FormControl component="fieldset">
-              <Typography variant="subtitle1" gutterBottom>
-                Runtime Preference
-              </Typography>
-              <RadioGroup
-                value={runtime}
-                onChange={(e) => setRuntime(e.target.value)}
-              >
-                <FormControlLabel value="short" control={<Radio />} label="Short (<90m)" />
-                <FormControlLabel value="medium" control={<Radio />} label="Medium (90-150m)" />
-                <FormControlLabel value="long" control={<Radio />} label="Long (>150m)" />
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <Typography component="legend">Runtime Preference</Typography>
+              <RadioGroup row value={runtime} onChange={handleRuntimeChange}>
+                <FormControlLabel
+                  value="short"
+                  control={<Radio />}
+                  label="Short (<90m)"
+                />
+                <FormControlLabel
+                  value="medium"
+                  control={<Radio />}
+                  label="Medium (90-150m)"
+                />
+                <FormControlLabel
+                  value="long"
+                  control={<Radio />}
+                  label="Long (>150m)"
+                />
               </RadioGroup>
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Age"
               type="number"
+              label="Your Age"
               value={age}
-              onChange={(e) => setAge(e.target.value)}
-              InputProps={{ inputProps: { min: 0, max: 100 } }}
+              onChange={handleAgeChange}
+              inputProps={{ min: 1, max: 100 }}
             />
           </Grid>
 
           <Grid item xs={12}>
             <Button
-              fullWidth
               variant="contained"
+              color="primary"
               size="large"
-              type="submit"
-              disabled={recommendationMutation.isPending}
+              onClick={handleSubmit}
+              disabled={loading}
+              fullWidth
             >
-              {recommendationMutation.isPending ? 'Getting Recommendations...' : 'Get Recommendations'}
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Get Recommendations'}
             </Button>
           </Grid>
         </Grid>
@@ -183,43 +177,37 @@ const MovieRecommender = () => {
 
       <Grid container spacing={3}>
         {recommendations.map((movie, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card sx={{ height: '100%' }}>
+          <Fade in={true} key={index} style={{ transitionDelay: `${index * 100}ms` }}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardMedia
                   component="img"
-                  height="300"
-                  image={movie.poster_path || 'https://via.placeholder.com/300x450'}
-                  alt={movie.title}
+                  height="200"
+                  image={`https://picsum.photos/seed/${movie.name}/400/200`}
+                  alt={movie.name}
+                  sx={{ objectFit: 'cover' }}
                 />
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {movie.title} ({movie.year})
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography gutterBottom variant="h6" component="h2">
+                    {movie.name} ({movie.year})
                   </Typography>
-                  <Rating value={movie.rating / 2} precision={0.5} readOnly />
-                  <Stack direction="row" spacing={1} sx={{ my: 1 }}>
-                    {movie.genres.map((genre, i) => (
-                      <Chip key={i} label={genre} size="small" />
-                    ))}
-                  </Stack>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {movie.genre}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Runtime: {movie.runtime} minutes
+                    IMDb: {movie.rating.toFixed(1)} | Runtime: {movie.runtime_category}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {movie.tagline}
-                  </Typography>
+                  {movie.tagline && (
+                    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                      "{movie.tagline}"
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
-            </motion.div>
-          </Grid>
+            </Grid>
+          </Fade>
         ))}
       </Grid>
     </Container>
-  )
-}
-
-export default MovieRecommender 
+  );
+} 
