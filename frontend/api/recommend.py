@@ -1,9 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import os
 
-# Sample movies database
-sample_movies = [
+# Static list of movies
+MOVIES = [
     {
         "title": "The Shawshank Redemption",
         "genres": ["Drama"],
@@ -41,69 +40,65 @@ sample_movies = [
     }
 ]
 
-def get_recommendations(genres, runtime, age):
-    try:
-        # Filter by runtime
-        runtime_filters = {
-            'short': lambda x: x['runtime'] < 90,
-            'medium': lambda x: 90 <= x['runtime'] <= 120,
-            'long': lambda x: x['runtime'] > 120
+def handler(request):
+    if request.method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
         }
-        
-        # Filter movies based on genres and runtime
-        filtered_movies = [
-            movie for movie in sample_movies 
-            if (not genres or any(g in movie['genres'] for g in genres))
-            and (not runtime or runtime_filters[runtime](movie))
-        ]
-        
-        # Sort by rating
-        filtered_movies.sort(key=lambda x: x['rating'], reverse=True)
-        
-        return filtered_movies[:5]  # Return top 5 movies
-    except Exception as e:
-        print(f"Error in get_recommendations: {str(e)}")
-        return []
 
-class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
+    if request.method == 'POST':
         try:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data)
+            body = json.loads(request.body)
+            genres = body.get('genres', [])
+            runtime = body.get('runtime', 'medium')
             
-            genres = data.get('genres', [])
-            runtime = data.get('runtime', 'medium')
-            age = data.get('age', 25)
-            
-            recommendations = get_recommendations(genres, runtime, age)
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-            self.end_headers()
-            
-            response = {
-                'success': True,
-                'recommendations': recommendations
+            # Filter movies based on genres and runtime
+            recommendations = []
+            for movie in MOVIES:
+                # Check if any of the selected genres match the movie's genres
+                genre_match = not genres or any(g in movie['genres'] for g in genres)
+                
+                # Check runtime match
+                runtime_match = False
+                if runtime == 'short' and movie['runtime'] < 90:
+                    runtime_match = True
+                elif runtime == 'medium' and 90 <= movie['runtime'] <= 150:
+                    runtime_match = True
+                elif runtime == 'long' and movie['runtime'] > 150:
+                    runtime_match = True
+                
+                if genre_match and runtime_match:
+                    recommendations.append(movie)
+
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(recommendations)
             }
             
-            self.wfile.write(json.dumps(response).encode())
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                'success': False,
-                'error': str(e)
-            }).encode())
-        
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers() 
+            return {
+                'statusCode': 500,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': str(e)})
+            }
+
+    return {
+        'statusCode': 405,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({'error': 'Method not allowed'})
+    } 
