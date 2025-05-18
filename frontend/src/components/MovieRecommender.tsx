@@ -46,7 +46,7 @@ interface MovieRecommenderProps {
   recommendations: any[]
 }
 
-const API_URL = 'http://localhost:3001/api/recommend'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 // Theme constants
 const THEME = {
@@ -81,7 +81,7 @@ export const MovieRecommender = ({
     }
     
     try {
-      const response = await axios.post(API_URL, payload)
+      const response = await axios.post(`${API_URL}/api/recommend`, payload)
       if (response.data.success) {
         onRecommendations(response.data.recommendations)
       } else {
