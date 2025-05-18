@@ -1,87 +1,77 @@
 # Movie Recommendation App
 
-A modern web application that suggests movies based on genre, runtime, and age preferences using a pre-trained machine learning model.
+A modern web application that recommends movies based on user preferences using a pre-trained machine learning model.
 
 ## Features
 
-- Multi-select genre filtering
-- Runtime preference selection (Short/Medium/Long)
-- Age-based recommendations
-- Modern, responsive UI with dark theme
-- Smooth animations and transitions
-- Movie cards with posters, ratings, and details
+- Genre-based movie recommendations
+- Runtime preference filtering
+- Age-appropriate suggestions
+- Modern, Netflix-inspired UI
+- Responsive design
 
 ## Tech Stack
 
-- Frontend:
-  - React with TypeScript
-  - Material-UI for components
-  - Framer Motion for animations
-  - React Query for API calls
-  - Vite for build tooling
+- Frontend: React + TypeScript + Vite
+- UI Framework: Material-UI
+- Backend: Flask
+- ML Model: Scikit-learn (pre-trained)
+- Deployment: Vercel
 
-- Backend:
-  - Flask API
-  - scikit-learn for ML model
-  - CORS support
-  - Environment variable configuration
+## Setup
 
-## Local Development
+### Prerequisites
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd movie-recommendation-app
-```
+- Node.js (v14 or higher)
+- Python (v3.8 or higher)
+- Git
 
-2. Set up the frontend:
+### Frontend Setup
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-3. Set up the backend:
+### Backend Setup
+
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
 
-4. Open http://localhost:5173 in your browser
+### Development
 
-## Deployment
+1. Start the backend server (will run on http://localhost:5000)
+2. Start the frontend development server (will run on http://localhost:5173)
+3. The frontend will proxy API requests to the backend automatically
 
-The application is configured for deployment on Vercel:
+### Deployment
 
-1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Configure the following environment variables in Vercel:
-   - `PYTHON_VERSION`: 3.13
-   - Any other environment variables needed by your application
+The app is configured for deployment on Vercel:
 
-## Project Structure
+1. Push your changes to GitHub
+2. Connect your repository to Vercel
+3. Vercel will automatically deploy both frontend and backend
 
-```
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   └── App.tsx       # Main application
-│   ├── package.json
-│   └── vite.config.ts
-├── backend/               # Flask backend
-│   ├── app.py            # Main Flask application
-│   └── requirements.txt   # Python dependencies
-├── movie_recommender.joblib  # Pre-trained ML model
-└── vercel.json           # Vercel deployment config
-```
+## Model Usage
+
+The movie recommendation model (`movie_recommender.joblib`) uses the following parameters:
+
+- Genre preferences (multiple selections allowed)
+- Runtime preference (short/medium/long)
+- User's age (for age-appropriate recommendations)
+
+The model returns the top 5 movie recommendations based on these preferences.
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request 
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request 

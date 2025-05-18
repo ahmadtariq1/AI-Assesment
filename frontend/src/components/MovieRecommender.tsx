@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import {
-  Box,
   Container,
   Typography,
   Paper,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -20,6 +18,8 @@ import {
   CircularProgress,
   Alert,
   Fade,
+  Stack,
+  Box,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 
@@ -101,72 +101,64 @@ export default function MovieRecommender() {
       </Typography>
 
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Genres</InputLabel>
-              <Select
-                multiple
-                value={selectedGenres}
-                onChange={handleGenreChange}
-                label="Genres"
-              >
-                {genres.map((genre) => (
-                  <MenuItem key={genre} value={genre}>
-                    {genre}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <Typography component="legend">Runtime Preference</Typography>
-              <RadioGroup row value={runtime} onChange={handleRuntimeChange}>
-                <FormControlLabel
-                  value="short"
-                  control={<Radio />}
-                  label="Short (<90m)"
-                />
-                <FormControlLabel
-                  value="medium"
-                  control={<Radio />}
-                  label="Medium (90-150m)"
-                />
-                <FormControlLabel
-                  value="long"
-                  control={<Radio />}
-                  label="Long (>150m)"
-                />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              type="number"
-              label="Your Age"
-              value={age}
-              onChange={handleAgeChange}
-              inputProps={{ min: 1, max: 100 }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handleSubmit}
-              disabled={loading}
-              fullWidth
+        <Stack spacing={3}>
+          <FormControl fullWidth>
+            <InputLabel>Genres</InputLabel>
+            <Select
+              multiple
+              value={selectedGenres}
+              onChange={handleGenreChange}
+              label="Genres"
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Get Recommendations'}
-            </Button>
-          </Grid>
-        </Grid>
+              {genres.map((genre) => (
+                <MenuItem key={genre} value={genre}>
+                  {genre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl>
+            <Typography component="legend">Runtime Preference</Typography>
+            <RadioGroup row value={runtime} onChange={handleRuntimeChange}>
+              <FormControlLabel
+                value="short"
+                control={<Radio />}
+                label="Short (<90m)"
+              />
+              <FormControlLabel
+                value="medium"
+                control={<Radio />}
+                label="Medium (90-150m)"
+              />
+              <FormControlLabel
+                value="long"
+                control={<Radio />}
+                label="Long (>150m)"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            type="number"
+            label="Your Age"
+            value={age}
+            onChange={handleAgeChange}
+            inputProps={{ min: 1, max: 100 }}
+          />
+
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleSubmit}
+            disabled={loading}
+            fullWidth
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Get Recommendations'}
+          </Button>
+        </Stack>
       </Paper>
 
       {error && (
@@ -175,39 +167,37 @@ export default function MovieRecommender() {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' } }}>
         {recommendations.map((movie, index) => (
           <Fade in={true} key={index} style={{ transitionDelay: `${index * 100}ms` }}>
-            <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={`https://picsum.photos/seed/${movie.name}/400/200`}
-                  alt={movie.name}
-                  sx={{ objectFit: 'cover' }}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography gutterBottom variant="h6" component="h2">
-                    {movie.name} ({movie.year})
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardMedia
+                component="img"
+                height="200"
+                image={`https://picsum.photos/seed/${movie.name}/400/200`}
+                alt={movie.name}
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography gutterBottom variant="h6" component="h2">
+                  {movie.name} ({movie.year})
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {movie.genre}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  IMDb: {movie.rating.toFixed(1)} | Runtime: {movie.runtime_category}
+                </Typography>
+                {movie.tagline && (
+                  <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                    "{movie.tagline}"
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {movie.genre}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    IMDb: {movie.rating.toFixed(1)} | Runtime: {movie.runtime_category}
-                  </Typography>
-                  {movie.tagline && (
-                    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-                      "{movie.tagline}"
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
+                )}
+              </CardContent>
+            </Card>
           </Fade>
         ))}
-      </Grid>
+      </Box>
     </Container>
   );
 } 

@@ -1,82 +1,90 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import joblib
+from sklearn.metrics.pairwise import cosine_similarity
 import os
-import json
-import logging
-from typing import List, Dict
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the movies data
-try:
-    movies_path = os.path.join(os.path.dirname(__file__), 'movies.json')
-    logger.info(f"Loading movies from: {movies_path}")
-    with open(movies_path, 'r') as f:
-        movies_data = json.load(f)
-    logger.info("Movies data loaded successfully")
-except Exception as e:
-    logger.error(f"Error loading movies data: {str(e)}")
-    movies_data = {"movies": []}
+# Load the model
+model_path = os.path.join(os.path.dirname(__file__), 'movie_recommender.joblib')
 
-def filter_movies(genres: List[str], runtime: str, age: int) -> List[Dict]:
-    """Filter movies based on user preferences."""
-    runtime_ranges = {
-        'short': (0, 90),
-        'medium': (90, 150),
-        'long': (150, float('inf'))
-    }
-    
-    runtime_min, runtime_max = runtime_ranges.get(runtime, (90, 150))
-    
-    filtered_movies = []
-    for movie in movies_data['movies']:
-        # Check if any of the selected genres match the movie's genres
-        if any(genre in movie['genres'] for genre in genres):
-            # Check if runtime is within the selected range
-            if runtime_min <= movie['runtime'] <= runtime_max:
-                filtered_movies.append(movie)
-    
-    # Sort by rating and return top 5
-    return sorted(filtered_movies, key=lambda x: x['rating'], reverse=True)[:5]
+def recommend_movies(genre_preference, runtime_pref, age, top_n=5, min_rating=8.0):
+    """
+    Recommend movies based on genre preference, runtime preference, and age
+    """
+    try:
+        # Load the model
+        model = joblib.load(model_path)
+        tfidf = model['tfidf']
+        cosine_sim = model['cosine_sim']
+        movies = model['movies']
+        
+        # Determine age rating based on user's age
+        if age < 10:
+            age_rating = 'all'
+        elif 10 <= age < 13:
+            age_rating = '10+'
+        elif 13 <= age < 17:
+            age_rating = '13+'
+        else:
+            age_rating = '17+'
+        
+        # Clean genre input
+        cleaned_genre = ' '.join([g.strip().lower() for g in genre_preference.split(',')])
+        
+        # Create query string
+        query = f"{cleaned_genre} {runtime_pref.lower()} {age_rating}"
+        
+        # Vectorize the query
+        query_vec = tfidf.transform([query])
+        
+        # Compute similarity between query and all movies
+        sim_scores = cosine_similarity(query_vec, tfidf.transform(model['features'])).flatten()
+        
+        # Filter movies by minimum rating and age appropriateness
+        valid_movies = movies[
+            (movies['rating'] >= min_rating) & 
+            (movies['age_rating'] <= age_rating)
+        ].copy()
+        valid_movies['similarity'] = sim_scores[valid_movies.index]
+        
+        # Get top N most similar movies
+        recommendations = valid_movies.sort_values(
+            by=['similarity', 'rating'], 
+            ascending=[False, False]
+        ).head(top_n)
+        
+        # Prepare output
+        return recommendations[['name', 'year', 'genre', 'rating', 'runtime_category', 'tagline']].to_dict('records')
+    except Exception as e:
+        print(f"Error in recommend_movies: {str(e)}")
+        return []
 
-@app.route('/api/predict', methods=['POST'])
-def predict():
+@app.route('/api/recommend', methods=['POST'])
+def get_recommendations():
     try:
         data = request.json
-        logger.info(f"Received request data: {data}")
-
-        genres = data.get('genres', [])
-        runtime = data.get('runtime', 'medium')
-        age = data.get('age', 25)
-
-        if not genres:
-            return jsonify({'error': 'At least one genre must be selected', 'status': 'error'}), 400
-
-        # Get movie recommendations
-        recommendations = filter_movies(genres, runtime, age)
+        genre_preference = data.get('genres', '')
+        runtime_pref = data.get('runtime', 'medium')
+        age = int(data.get('age', 18))
         
-        if not recommendations:
-            return jsonify({
-                'error': 'No movies found matching your criteria',
-                'status': 'error'
-            }), 404
-
-        response = {
-            'recommendations': recommendations,
-            'status': 'success'
-        }
-
-        logger.info(f"Sending response with {len(recommendations)} recommendations")
-        return jsonify(response)
-
+        recommendations = recommend_movies(
+            genre_preference=genre_preference,
+            runtime_pref=runtime_pref,
+            age=age
+        )
+        
+        return jsonify({
+            'success': True,
+            'recommendations': recommendations
+        })
     except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
-        return jsonify({'error': str(e), 'status': 'error'}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    app.run(debug=True) 
