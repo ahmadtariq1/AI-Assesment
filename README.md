@@ -1,80 +1,87 @@
-# Movie Recommendation System
+# Movie Recommendation App
 
-A modern web application that provides personalized movie recommendations based on user preferences including genres, runtime, and age preferences.
+A modern web application that suggests movies based on genre, runtime, and age preferences using a pre-trained machine learning model.
 
 ## Features
 
-- React/TypeScript frontend with Material-UI components
-- Flask backend with machine learning-based recommendation system
-- Dark theme with modern UI/UX
-- Real-time recommendations
-- Responsive design
+- Multi-select genre filtering
+- Runtime preference selection (Short/Medium/Long)
+- Age-based recommendations
+- Modern, responsive UI with dark theme
+- Smooth animations and transitions
+- Movie cards with posters, ratings, and details
 
-## Project Structure
+## Tech Stack
 
+- Frontend:
+  - React with TypeScript
+  - Material-UI for components
+  - Framer Motion for animations
+  - React Query for API calls
+  - Vite for build tooling
+
+- Backend:
+  - Flask API
+  - scikit-learn for ML model
+  - CORS support
+  - Environment variable configuration
+
+## Local Development
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd movie-recommendation-app
 ```
-.
-├── frontend/           # React TypeScript frontend
-├── backend/           # Flask Python backend
-└── movie_recommender.joblib  # Pre-trained recommendation model
-```
 
-## Setup Instructions
-
-### Frontend
-
+2. Set up the frontend:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
-
-### Backend
-
+3. Set up the backend:
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
-python app/main.py
+python app.py
 ```
 
-The backend API will be available at `http://localhost:3001`
-
-## Environment Variables
-
-Create a `.env` file in the frontend directory:
-
-```
-VITE_API_URL=http://localhost:3001
-```
+4. Open http://localhost:5173 in your browser
 
 ## Deployment
 
-### Frontend (Vercel)
+The application is configured for deployment on Vercel:
 
-The frontend is ready for Vercel deployment. Connect your GitHub repository to Vercel and it will automatically detect the React/Vite configuration.
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Configure the following environment variables in Vercel:
+   - `PYTHON_VERSION`: 3.13
+   - Any other environment variables needed by your application
 
-### Backend
+## Project Structure
 
-The backend requires a Python environment with the dependencies listed in `requirements.txt`.
+```
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   └── App.tsx       # Main application
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/               # Flask backend
+│   ├── app.py            # Main Flask application
+│   └── requirements.txt   # Python dependencies
+├── movie_recommender.joblib  # Pre-trained ML model
+└── vercel.json           # Vercel deployment config
+```
 
-## Tech Stack
+## Contributing
 
-- Frontend:
-  - React
-  - TypeScript
-  - Material-UI
-  - Framer Motion
-  - Vite
-
-- Backend:
-  - Flask
-  - scikit-learn
-  - Python
-
-## License
-
-MIT 
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request 
